@@ -1,8 +1,10 @@
 # 📊 Terraform Plan Analysis Report
-**Generated on:** 2023-10-01  
+
+**Generated on:** 2025-12-07  
 **Environment:** Production
 
 ## 📝 Executive Summary
+
 This Terraform plan proposes **6 infrastructure changes** to the Production environment:
 
 - **3 resources to add** ✅
@@ -11,21 +13,20 @@ This Terraform plan proposes **6 infrastructure changes** to the Production envi
 
 ### Key Changes Overview
 
-1. **New Firewall Rule**: A new firewall rule is being created to allow SSH access from a specific range.
+1. **New Firewall Rule**: A new firewall rule is being created to allow SSH access from a specific source range.
 
-2. **Subnetwork Update**: An existing private subnetwork is being updated to include new secondary IP ranges.
+2. **Subnetwork Update**: An existing private subnetwork is being updated to include additional secondary IP ranges.
 
-3. **GKE Cluster Replacement**: The Google Kubernetes Engine (GKE) cluster is being replaced due to configuration changes that require a new instance.
+3. **GKE Cluster Replacement**: The primary GKE cluster is being replaced to enable new features and configurations.
 
-4. **Database Instance Update**: The SQL database instance is being updated to enhance its performance tier and enable backup configurations.
+4. **Database Instance Update**: The SQL database instance is being updated to enhance performance and enable insights.
 
-5. **New Read-Only User**: A new read-only user is being created for the SQL database instance.
-
-6. **Destruction of Legacy Topic**: A legacy Pub/Sub topic is being destroyed as part of the cleanup process.
+5. **New Readonly User**: A new readonly user is being created for database access.
 
 ## 🔍 Detailed Changes
 
 ### 1. ✅ google_compute_firewall - Allow SSH from Bastion
+
 - **Resource**: `google_compute_firewall.ssh`
 - **Action**: ADD
 - **Risk Level**: 🟢 LOW
@@ -39,12 +40,12 @@ This Terraform plan proposes **6 infrastructure changes** to the Production envi
 ```
 + network = module.project.module.network.google_compute_network.main.name
 ```
-→ This rule will be associated with the main network defined in the project.
+→ This rule will be associated with the main network of the project.
 
 ```
 + project = "sample-project"
 ```
-→ The firewall rule will be created in the "sample-project".
+→ The rule will be created within the specified project.
 
 ```
 + allow {
@@ -52,31 +53,37 @@ This Terraform plan proposes **6 infrastructure changes** to the Production envi
     + ports    = ["22"]
   }
 ```
-→ The rule allows TCP traffic on port 22, enabling SSH access.
+→ This rule allows TCP traffic on port 22, which is used for SSH.
 
 ```
 + source_ranges = [
     "10.0.10.0/24",
   ]
 ```
-→ The rule permits SSH access only from the specified IP range.
+→ The rule permits SSH access from the specified IP range of 10.0.10.0/24.
+
+```
++ target_tags = ["bastion"]
+```
+→ The rule applies to instances tagged with "bastion".
 
 **Details**
 - **Name**: allow-ssh-from-bastion
 - **Resource Group**: module.project.module.network
 
 **Impact Assessment**
-The addition of this firewall rule enhances security by restricting SSH access to a specific range of IP addresses. This change enables secure management of resources within the network while minimizing exposure to potential attacks.
+- This change enables secure SSH access from the bastion host to other instances within the network. It enhances security by restricting access to a specific IP range.
 
 **Use Cases Enabled:**
-- Secure remote access for administrators.
-- Enhanced security posture for the network.
+- Secure remote management of instances.
+- Controlled access for administrative tasks.
 
 **Benefits**
-- Improved security by limiting access.
-- Simplified management of SSH access.
+- Improved security posture by limiting SSH access.
+- Simplified management of access rules.
 
 ### 2. 🔄 google_compute_subnetwork - Update Private Subnetwork
+
 - **Resource**: `google_compute_subnetwork.private`
 - **Action**: UPDATE IN-PLACE
 - **Risk Level**: 🟡 MEDIUM
@@ -94,7 +101,7 @@ The addition of this firewall rule enhances security by restricting SSH access t
       },
   ]
 ```
-→ Two new secondary IP ranges are being added for pods and services, allowing for better resource allocation in the Kubernetes cluster.
+→ Two new secondary IP ranges are being added to the private subnetwork for pods and services.
 
 **Details**
 - **Name**: private-subnet-1
@@ -102,17 +109,18 @@ The addition of this firewall rule enhances security by restricting SSH access t
 - **IP CIDR Range**: 10.0.2.0/24
 
 **Impact Assessment**
-Updating the private subnetwork to include additional secondary IP ranges allows for better management of IP addresses within the Kubernetes cluster. This change enables the deployment of more services and pods without IP conflicts.
+- This update allows for additional IP address space for Kubernetes pods and services, enhancing the scalability of the network.
 
 **Use Cases Enabled:**
-- Increased scalability for Kubernetes deployments.
-- Enhanced resource management within the network.
+- Increased capacity for Kubernetes workloads.
+- Better organization of network resources.
 
 **Benefits**
-- Improved resource allocation.
-- Flexibility for future growth.
+- Improved network management and resource allocation.
+- Enhanced performance for containerized applications.
 
 ### 3. 🔄 google_container_cluster - Replace Primary GKE Cluster
+
 - **Resource**: `google_container_cluster.primary`
 - **Action**: REPLACE
 - **Risk Level**: 🔴 HIGH
@@ -121,7 +129,7 @@ Updating the private subnetwork to include additional secondary IP ranges allows
 ```
 ~ enable_autopilot = false -> true
 ```
-→ The GKE cluster is being configured to enable Autopilot mode, which simplifies cluster management.
+→ The cluster is being configured to enable autopilot mode, which automates infrastructure management.
 
 ```
 - master_authorized_networks_config {
@@ -131,14 +139,14 @@ Updating the private subnetwork to include additional secondary IP ranges allows
       }
   }
 ```
-→ The configuration allowing public access to the master node is being removed, enhancing security.
+→ The configuration for public access is being removed, enhancing security.
 
 ```
 + release_channel {
     + channel = "REGULAR"
   }
 ```
-→ The cluster will now follow the regular release channel for updates.
+→ The cluster will now use the regular release channel for updates.
 
 **Details**
 - **Name**: primary-gke-cluster
@@ -146,34 +154,36 @@ Updating the private subnetwork to include additional secondary IP ranges allows
 - **Initial Node Count**: 1
 
 **Impact Assessment**
-Replacing the GKE cluster introduces significant changes to its configuration, including enabling Autopilot mode and removing public access to the master node. This enhances security but requires careful planning to ensure minimal disruption to services.
+- Replacing the GKE cluster allows for improved management features and security enhancements but may lead to downtime during the transition.
 
 **Use Cases Enabled:**
-- Simplified cluster management with Autopilot.
-- Improved security posture by restricting master access.
+- Automated management of cluster resources.
+- Enhanced security configurations.
 
 **Benefits**
-- Reduced operational overhead.
-- Enhanced security and compliance.
+- Reduced operational overhead with autopilot.
+- Improved security posture by removing public access.
 
 ### 4. 🔄 google_sql_database_instance - Update SQL Database Instance
+
 - **Resource**: `google_sql_database_instance.primary`
 - **Action**: UPDATE IN-PLACE
 - **Risk Level**: 🟡 MEDIUM
 
 **Changes:**
 ```
-~ tier = "db-custom-2-7680" -> "db-custom-4-15360"
+~ settings {
+    ~ tier = "db-custom-2-7680" -> "db-custom-4-15360"
+  }
 ```
-→ The performance tier of the SQL database instance is being upgraded to provide more resources.
+→ The database tier is being upgraded to provide more resources.
 
 ```
 ~ backup_configuration {
     ~ enabled = false -> true
-      binary_log_enabled = false
-    }
+  }
 ```
-→ Backup configuration is being enabled, ensuring data safety.
+→ Backups are being enabled for the database, increasing data safety.
 
 ```
 + insights_config {
@@ -182,24 +192,25 @@ Replacing the GKE cluster introduces significant changes to its configuration, i
     + record_application_tags = true
   }
 ```
-→ New insights configurations are being added to enhance monitoring capabilities.
+→ Insights configuration is being added to enhance monitoring capabilities.
 
 **Details**
 - **Name**: orders-db
 - **Database Version**: POSTGRES_13
 
 **Impact Assessment**
-Updating the SQL database instance enhances its performance and enables backup configurations, which are critical for data recovery. This change allows for better monitoring and insights into database performance.
+- Upgrading the database instance tier and enabling backups improves performance and data protection, which is critical for business operations.
 
 **Use Cases Enabled:**
-- Enhanced database performance for applications.
+- Enhanced performance for database queries.
 - Improved data recovery options.
 
 **Benefits**
-- Increased reliability and performance.
+- Increased reliability and performance of the database.
 - Better monitoring and insights into database usage.
 
-### 5. ✅ google_sql_user - Create Read-Only User
+### 5. ✅ google_sql_user - Create Readonly User
+
 - **Resource**: `google_sql_user.readonly`
 - **Action**: ADD
 - **Risk Level**: 🟢 LOW
@@ -208,7 +219,7 @@ Updating the SQL database instance enhances its performance and enables backup c
 ```
 + instance = google_sql_database_instance.primary.name
 ```
-→ A new read-only user is being created for the primary SQL database instance.
+→ A new readonly user is being created for the primary database instance.
 
 ```
 + name     = "readonly_user"
@@ -218,29 +229,30 @@ Updating the SQL database instance enhances its performance and enables backup c
 ```
 + password = (sensitive value)
 ```
-→ A password is being set for the new user (value is sensitive).
+→ The password for the user is being set (sensitive information).
 
 ```
 + type     = "BUILT_IN"
 ```
-→ The user type is set to built-in, indicating it is a standard user.
+→ The user type is set to built-in, indicating it is a standard database user.
 
 **Details**
 - **Name**: readonly_user
-- **Instance**: orders-db
+- **Resource Group**: module.project.module.sql
 
 **Impact Assessment**
-Creating a read-only user enhances security by limiting access to sensitive data. This user can be utilized for reporting and analytics without the risk of modifying the database.
+- Creating a readonly user allows for secure access to the database for reporting and analysis without the risk of data modification.
 
 **Use Cases Enabled:**
-- Secure access for reporting and analytics.
-- Reduced risk of accidental data modification.
+- Secure access for analytics and reporting.
+- Separation of duties for database access.
 
 **Benefits**
 - Enhanced security by limiting user permissions.
-- Simplified access for non-administrative tasks.
+- Improved compliance with data access policies.
 
 ### 6. ❌ google_pubsub_topic - Destroy Legacy Audit Topic
+
 - **Resource**: `google_pubsub_topic.audit`
 - **Action**: DESTROY
 - **Risk Level**: 🔴 HIGH
@@ -249,7 +261,7 @@ Creating a read-only user enhances security by limiting access to sensitive data
 ```
 - name  = "legacy-audit-topic" -> null
 ```
-→ The legacy audit topic is being destroyed and will no longer exist.
+→ The legacy audit topic is being removed from the project.
 
 ```
 - labels = {
@@ -260,40 +272,36 @@ Creating a read-only user enhances security by limiting access to sensitive data
 
 **Details**
 - **Name**: legacy-audit-topic
+- **Resource Group**: module.project
 
 **Impact Assessment**
-Destroying the legacy audit topic may impact any existing systems or processes that rely on it for logging or auditing purposes. This change should be communicated to all stakeholders to avoid disruptions.
+- Destroying the legacy audit topic may impact any existing systems relying on it for logging and monitoring, potentially leading to data loss.
 
 **Use Cases Enabled:**
-- Cleanup of unused resources.
-- Streamlining resource management.
+- Clean-up of unused resources.
 
 **Benefits**
-- Reduced clutter in resource management.
-- Potential cost savings by removing unused resources.
+- Reduced clutter and potential confusion in resource management.
 
 ## ⚠️ Risk Assessment
-### 🔴 High
-- Replacement of the GKE cluster introduces significant changes that could disrupt services.
-- Destruction of the legacy audit topic may impact existing logging processes.
 
-### 🟡 Medium
-- Updates to the SQL database instance and private subnetwork may introduce temporary performance issues during the transition.
+### 🔴 High Risks
+- Replacement of the GKE cluster could lead to downtime and service disruption.
+- Destruction of the legacy audit topic may impact existing monitoring and logging.
 
-### 🟢 Low
-- Addition of the firewall rule and read-only user pose minimal risk and enhance security.
+### 🟡 Medium Risks
+- Updates to the SQL database instance and GKE cluster settings could introduce temporary performance issues.
+
+### 🟢 Low Risks
+- Adding a new firewall rule and readonly user presents minimal risk to existing operations.
 
 ## 💡 Recommendations
 
-1. Review the impact of replacing the GKE cluster with all stakeholders to ensure minimal disruption.
+1. Schedule the GKE cluster replacement during a maintenance window to minimize downtime.
 
-2. Ensure that backup configurations for the SQL database instance are tested after enabling.
+2. Ensure that all stakeholders are informed about the destruction of the legacy audit topic and its implications.
 
-3. Communicate the destruction of the legacy audit topic to all relevant teams to avoid confusion.
-
-4. Monitor the performance of the updated SQL database instance closely after the changes are applied.
-
-5. Document the new firewall rule and its purpose for future reference.
+3. Implement monitoring for the SQL database instance after the update to catch any performance issues early.
 
 ## ✍️ Approval Sign-Off
 
@@ -304,8 +312,8 @@ Destroying the legacy audit topic may impact any existing systems or processes t
 | Security Lead            |                     |                   |                   |
 | Data Platform Lead       |                     |                   |                   |
 
-**Report Generated**: 2023-10-01  
-**Terraform Version**: v1.9.0  
+**Report Generated**: 2025-12-07  
+**Terraform Version**: 1.9.0  
 **Plan File**: terraform_plan.tf  
 **Environment**: Production  
 **Review Status**: Pending Approval

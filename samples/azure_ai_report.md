@@ -1,9 +1,11 @@
 # 📊 Terraform Plan Analysis Report
-**Generated on:** 2023-10-03  
+
+**Generated on:** 2025-12-07  
 **Environment:** Production
 
 ## 📝 Executive Summary
-This Terraform plan proposes **3 infrastructure changes** to the Production environment:
+
+This Terraform plan proposes **5 infrastructure changes** to the Production environment:
 
 - **3 resources to add** ✅
 - **1 resource to update** 🔄
@@ -11,17 +13,20 @@ This Terraform plan proposes **3 infrastructure changes** to the Production envi
 
 ### Key Changes Overview
 
-1. **New Virtual Network Peerings**: Establishing connections between hub and spoke networks.
-  
-2. **Web App Configuration Update**: Enhancements to the existing Azure Linux web app settings.
+1. **New Virtual Network Peering**: Establishing connectivity between hub and spoke networks.
 
-3. **Database Replacement**: Upgrading the SQL database configuration necessitating a replacement.
+2. **Updated Web Application**: Enhancements to the existing web application configuration.
 
-4. **Diagnostic Setting Removal**: Deleting the existing monitoring diagnostic settings for the web app.
+3. **Database Replacement**: Upgrading the existing database with a new configuration.
+
+4. **New Private Endpoint**: Enabling secure access to the SQL database.
+
+5. **Diagnostic Setting Removal**: Removing monitoring settings for the web application.
 
 ## 🔍 Detailed Changes
 
 ### 1. ✅ azurerm_virtual_network_peering - Hub to Spoke Peering
+
 - **Resource**: `azurerm_virtual_network_peering.hub_to_spoke`
 - **Action**: ADD
 - **Risk Level**: 🟢 LOW
@@ -30,55 +35,57 @@ This Terraform plan proposes **3 infrastructure changes** to the Production envi
 ```
 + name                      = "hub-to-spoke"
 ```
-→ A new name is being assigned to the virtual network peering.
+→ A new peering connection named "hub-to-spoke" will be created.
 
 ```
 + resource_group_name       = module.hub.azurerm_resource_group.hub.name
 ```
-→ This specifies the resource group where the peering will be created.
+→ The resource group for this peering will be set to the hub's resource group.
 
 ```
 + virtual_network_name      = module.hub.azurerm_virtual_network.hub_vnet.name
 ```
-→ This indicates the virtual network that will be involved in the peering.
+→ This peering will connect to the hub's virtual network.
 
 ```
 + remote_virtual_network_id = module.spoke.azurerm_virtual_network.spoke_vnet.id
 ```
-→ This sets the remote virtual network ID for the peering connection.
+→ The remote virtual network ID will be linked to the spoke's virtual network.
 
 ```
 + allow_forwarded_traffic   = true
 ```
-→ Forwarded traffic is allowed through this peering connection.
+→ Forwarded traffic will be allowed through this peering.
 
 ```
 + allow_gateway_transit     = true
 ```
-→ Gateway transit is enabled, allowing the hub to route traffic to the spoke.
+→ Gateway transit will be enabled for this peering.
 
 ```
 + use_remote_gateways       = false
 ```
-→ This peering will not use remote gateways.
+→ Remote gateways will not be used in this configuration.
 
 **Details**
 - **Name**: hub-to-spoke
 - **Resource Group**: module.hub.azurerm_resource_group.hub.name
 - **Virtual Network**: module.hub.azurerm_virtual_network.hub_vnet.name
+- **Remote Virtual Network**: module.spoke.azurerm_virtual_network.spoke_vnet.id
 
 **Impact Assessment**
-The creation of this virtual network peering will enable seamless communication between the hub and spoke networks. This facilitates resource sharing and improves network efficiency. There are minimal risks associated with this addition, as it enhances connectivity without altering existing configurations.
+This change establishes a peering connection between the hub and spoke virtual networks, enabling seamless communication between resources in both networks. This is crucial for distributed applications that require interconnectivity.
 
 **Use Cases Enabled:**
-- Improved resource access between different network segments.
-- Enhanced network performance through direct peering.
+- Cross-network resource access
+- Enhanced application performance through reduced latency
 
 **Benefits**
-- Simplifies network architecture.
-- Reduces latency for inter-network communication.
+- Improved network architecture
+- Simplified management of inter-VNet traffic
 
 ### 2. ✅ azurerm_virtual_network_peering - Spoke to Hub Peering
+
 - **Resource**: `azurerm_virtual_network_peering.spoke_to_hub`
 - **Action**: ADD
 - **Risk Level**: 🟢 LOW
@@ -87,55 +94,57 @@ The creation of this virtual network peering will enable seamless communication 
 ```
 + name                      = "spoke-to-hub"
 ```
-→ A new name is being assigned to the virtual network peering.
+→ A new peering connection named "spoke-to-hub" will be created.
 
 ```
 + resource_group_name       = module.spoke.azurerm_resource_group.spoke.name
 ```
-→ This specifies the resource group where the peering will be created.
+→ The resource group for this peering will be set to the spoke's resource group.
 
 ```
 + virtual_network_name      = module.spoke.azurerm_virtual_network.spoke_vnet.name
 ```
-→ This indicates the virtual network that will be involved in the peering.
+→ This peering will connect to the spoke's virtual network.
 
 ```
 + remote_virtual_network_id = module.hub.azurerm_virtual_network.hub_vnet.id
 ```
-→ This sets the remote virtual network ID for the peering connection.
+→ The remote virtual network ID will be linked to the hub's virtual network.
 
 ```
 + allow_forwarded_traffic   = true
 ```
-→ Forwarded traffic is allowed through this peering connection.
+→ Forwarded traffic will be allowed through this peering.
 
 ```
 + allow_gateway_transit     = false
 ```
-→ Gateway transit is not enabled for this peering.
+→ Gateway transit will not be enabled for this peering.
 
 ```
 + use_remote_gateways       = true
 ```
-→ This peering will use remote gateways.
+→ Remote gateways will be utilized in this configuration.
 
 **Details**
 - **Name**: spoke-to-hub
 - **Resource Group**: module.spoke.azurerm_resource_group.spoke.name
 - **Virtual Network**: module.spoke.azurerm_virtual_network.spoke_vnet.name
+- **Remote Virtual Network**: module.hub.azurerm_virtual_network.hub_vnet.id
 
 **Impact Assessment**
-This virtual network peering allows the spoke network to communicate with the hub network, enabling shared services and resources. The configuration supports efficient routing of traffic, with minimal risk as it complements existing network setups.
+This change creates a peering connection from the spoke to the hub, allowing resources in the spoke network to access services in the hub network. This is essential for applications that require data exchange between different network segments.
 
 **Use Cases Enabled:**
-- Resource sharing between spoke and hub networks.
-- Efficient routing of traffic for applications hosted in different networks.
+- Inter-network communication for applications
+- Centralized management of resources
 
 **Benefits**
-- Enhances overall network architecture.
-- Facilitates better resource management across networks.
+- Enhanced security through controlled access
+- Better resource utilization across networks
 
-### 3. 🔄 azurerm_linux_web_app - API Web App Update
+### 3. 🔄 azurerm_linux_web_app - API Web Application
+
 - **Resource**: `azurerm_linux_web_app.api`
 - **Action**: UPDATE IN-PLACE
 - **Risk Level**: 🟡 MEDIUM
@@ -147,7 +156,7 @@ This virtual network peering allows the spoke network to communicate with the hu
     + "Owner"       = "PlatformTeam"
 }
 ```
-→ New tags are being added to better categorize the web app for management purposes.
+→ New tags are being added to better categorize the resource for management.
 
 ```
 ~ site_config {
@@ -161,133 +170,137 @@ This virtual network peering allows the spoke network to communicate with the hu
     ~ always_on           = false -> true
 }
 ```
-→ The always-on setting is being enabled to ensure the app is always responsive.
+→ The application will now be set to always on, improving availability.
 
 ```
 + http2_enabled       = true
 ```
-→ HTTP/2 is being enabled for improved performance.
+→ HTTP/2 support will be enabled for better performance.
 
 ```
 ~ app_settings = {
     ~ "ASPNETCORE_ENVIRONMENT" = "Staging" -> "Production"
 }
 ```
-→ The environment setting is being changed from Staging to Production for deployment readiness.
+→ The environment setting is being changed from Staging to Production, reflecting the deployment stage.
 
 ```
 + "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app.instrumentation_key
 ```
-→ An Application Insights instrumentation key is being added for monitoring purposes.
+→ A new Application Insights instrumentation key is being added for monitoring.
 
 **Details**
 - **Name**: ge-api-prod
 - **Resource Group**: module.app.azurerm_resource_group.app.name
 - **Service Plan ID**: module.app.azurerm_service_plan.app_sp.id
+- **HTTPS Only**: true
 
 **Impact Assessment**
-Updating the web app configuration enhances its security and performance. The addition of monitoring capabilities allows for better oversight of application health. However, there is a medium risk involved as changes to the app settings may affect its current functionality temporarily during the update.
+This update enhances the web application's security and performance by enforcing a higher TLS version and enabling HTTP/2. The change to "always on" will improve user experience by reducing cold starts.
 
 **Use Cases Enabled:**
-- Improved application performance through HTTP/2.
-- Enhanced monitoring capabilities for better insights.
+- Improved security for web traffic
+- Enhanced performance for end-users
 
 **Benefits**
-- Increased security with updated TLS settings.
-- Better resource management with new tags.
+- Higher security compliance
+- Better application responsiveness
 
-### 4. 🔄 azurerm_mssql_database - App Database Replacement
+### 4. 🔄 azurerm_mssql_database - Application Database
+
 - **Resource**: `azurerm_mssql_database.appdb`
 - **Action**: REPLACE
 - **Risk Level**: 🔴 HIGH
 
 **Changes:**
 ```
-~ sku_name       = "GP_Gen5_4" -> "GP_Gen5_8" # forces replacement
+~ sku_name = "GP_Gen5_4" -> "GP_Gen5_8" # forces replacement
 ```
-→ The SKU of the database is being upgraded, necessitating a complete replacement of the resource.
+→ The SKU for the database is being upgraded, which requires the existing database to be replaced.
 
 ```
-~ max_size_gb    = 250 -> 512
+~ max_size_gb = 250 -> 512
 ```
-→ The maximum size of the database is being increased to accommodate more data.
+→ The maximum size of the database is being increased, allowing for more data storage.
 
 ```
 ~ zone_redundant = false -> true
 ```
-→ Zone redundancy is being enabled to enhance availability and reliability.
+→ Zone redundancy is being enabled, enhancing availability and reliability.
 
 **Details**
 - **Name**: appdb
 - **Server ID**: module.data.azurerm_mssql_server.sql.id
 
 **Impact Assessment**
-Replacing the database with a higher SKU and enabling zone redundancy significantly improves performance and availability. However, this operation carries a high risk due to potential downtime during the replacement process. It is crucial to ensure that backups are taken and that the application can handle the transition smoothly.
+Replacing the database with a higher SKU and enabling zone redundancy significantly improves performance and availability. However, this operation carries a high risk as it involves data migration and potential downtime.
 
 **Use Cases Enabled:**
-- Increased database capacity for growing applications.
-- Enhanced availability through zone redundancy.
+- Increased database capacity
+- Enhanced data availability
 
 **Benefits**
-- Improved performance with upgraded SKU.
-- Greater reliability with zone redundancy.
+- Better performance for database operations
+- Reduced risk of downtime due to redundancy
 
-### 5. ❌ azurerm_monitor_diagnostic_setting - API Diagnostic Setting Removal
+### 5. ❌ azurerm_monitor_diagnostic_setting - API Diagnostic Setting
+
 - **Resource**: `azurerm_monitor_diagnostic_setting.api`
 - **Action**: DESTROY
 - **Risk Level**: 🔴 HIGH
 
 **Changes:**
 ```
-- name                       = "diag-api" -> null
+- name = "diag-api" -> null
 ```
-→ The diagnostic setting name is being removed, indicating that monitoring will no longer be configured for this resource.
+→ The diagnostic setting named "diag-api" will be removed.
 
 ```
-- target_resource_id         = module.app.azurerm_linux_web_app.api.id -> null
+- target_resource_id = module.app.azurerm_linux_web_app.api.id -> null
 ```
-→ The association with the target resource (web app) is being removed.
+→ The target resource for this diagnostic setting will no longer be monitored.
 
 ```
 - log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id -> null
 ```
-→ The link to the log analytics workspace is being severed, which will stop logging diagnostics.
+→ The association with the log analytics workspace will be removed.
 
 **Details**
 - **Name**: diag-api
-- **Target Resource**: module.app.azurerm_linux_web_app.api.id
+- **Target Resource ID**: module.app.azurerm_linux_web_app.api.id
 
 **Impact Assessment**
-Removing the diagnostic settings will lead to a loss of monitoring capabilities for the web app. This is a high-risk operation as it may result in unmonitored application performance issues. It is advisable to ensure that alternative monitoring solutions are in place before proceeding with this change.
+Removing the diagnostic settings will stop monitoring and logging for the web application, which may hinder troubleshooting and performance analysis. This change poses a high risk as it could lead to a lack of visibility into application health.
 
 **Use Cases Enabled:**
-- Streamlined resource management by removing unnecessary configurations.
+- None, as monitoring is being removed.
 
 **Benefits**
-- Reduces clutter in the monitoring setup, but at the cost of losing visibility.
+- Reduced costs associated with monitoring services, but at the expense of visibility.
 
 ## ⚠️ Risk Assessment
+
 ### 🔴 High
-- Replacement of the SQL database may cause downtime.
-- Removal of diagnostic settings could lead to unmonitored application performance.
+- Replacement of the application database could lead to downtime and data migration issues.
+- Destruction of the diagnostic settings may result in a lack of monitoring and visibility.
 
 ### 🟡 Medium
-- Updates to the web app configuration may temporarily affect functionality.
+- Updates to the web application configuration may introduce unforeseen issues if not properly tested.
 
 ### 🟢 Low
-- New virtual network peerings enhance connectivity without altering existing configurations.
+- New virtual network peerings are generally low risk and enhance connectivity.
 
 ## 💡 Recommendations
 
-1. Ensure backups are taken before replacing the SQL database to prevent data loss.
+1. Thoroughly test the database replacement in a staging environment to mitigate risks associated with downtime.
 
-2. Monitor the web app closely after configuration updates to identify any immediate issues.
+2. Implement monitoring solutions to replace the removed diagnostic settings to maintain visibility into application performance.
 
-3. Consider implementing alternative monitoring solutions before removing existing diagnostic settings.
+3. Review and validate the web application changes with the development team to ensure compatibility with existing services.
 
-4. Review network configurations post-peering creation to ensure optimal performance.
+4. Ensure that all stakeholders are informed of the changes, especially those related to the database and monitoring.
 
-5. Document all changes made during this plan execution for future reference.
+5. Consider implementing a rollback plan in case the database replacement causes issues during deployment.
 
 ## ✍️ Approval Sign-Off
 
@@ -298,7 +311,7 @@ Removing the diagnostic settings will lead to a loss of monitoring capabilities 
 | Security Lead            |                     |                   |                   |
 | Data Platform Lead       |                     |                   |                   |
 
-**Report Generated**: 2023-10-03  
+**Report Generated**: 2025-12-07  
 **Terraform Version**: v1.9.1  
 **Plan File**: terraform_plan.tf  
 **Environment**: Production  
