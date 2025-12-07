@@ -1,7 +1,7 @@
 # Terraform Plan Report (Basic)
 
-**Generated:** 2025-11-20 20:49:50  
-**Plan File:** planQC20NovGN-output.txt
+**Generated:** 2025-12-07 23:08:26  
+**Plan File:** ..\samples\azure_plan_complex_1.txt
 
 ---
 
@@ -9,101 +9,107 @@
 
 | Metric | Count |
 |--------|-------|
-| Resources to Add | 0 |
-| Resources to Change | 5 |
+| Resources to Add | 3 |
+| Resources to Change | 1 |
 | Resources to Destroy | 1 |
-| **Total Changes** | 051 |
+| **Total Changes** | 311 |
 
 ---
 
 ## Resource Changes
 
-### 1. 🔄 UPDATED IN-PLACE - azurerm_virtual_network_peering.with_new
+### 1. ➕ CREATED - module.hub.azurerm_virtual_network_peering.hub_to_spoke
 
-**Action:** updated in-place
+**Action:** created
 
-**Resource Name:** `azurerm_virtual_network_peering.with_new`
-
-**Changes:**
-```
-~ resource "azurerm_virtual_network_peering" "with_new" {
-~ allow_gateway_transit                  = false -> true
-```
-
-### 2. 🔄 UPDATED IN-PLACE - azurerm_virtual_network_peering.with_old
-
-**Action:** updated in-place
-
-**Resource Name:** `azurerm_virtual_network_peering.with_old`
+**Resource Name:** `module.hub.azurerm_virtual_network_peering.hub_to_spoke`
 
 **Changes:**
 ```
-~ resource "azurerm_virtual_network_peering" "with_old" {
-~ allow_forwarded_traffic                = false -> true
++ resource "azurerm_virtual_network_peering" "hub_to_spoke" {
++ name                      = "hub-to-spoke"
++ resource_group_name       = module.hub.azurerm_resource_group.hub.name
++ virtual_network_name      = module.hub.azurerm_virtual_network.hub_vnet.name
++ remote_virtual_network_id = module.spoke.azurerm_virtual_network.spoke_vnet.id
++ allow_forwarded_traffic   = true
++ allow_gateway_transit     = true
++ use_remote_gateways       = false
 ```
 
-### 3. 🔄 UPDATED IN-PLACE - module.autofeed_cc.azurerm_windows_web_app.this
+### 2. ➕ CREATED - module.spoke.azurerm_virtual_network_peering.spoke_to_hub
 
-**Action:** updated in-place
+**Action:** created
 
-**Resource Name:** `module.autofeed_cc.azurerm_windows_web_app.this`
+**Resource Name:** `module.spoke.azurerm_virtual_network_peering.spoke_to_hub`
 
 **Changes:**
 ```
-~ resource "azurerm_windows_web_app" "this" {
-~ public_network_access_enabled                  = true -> false
++ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
++ name                      = "spoke-to-hub"
++ resource_group_name       = module.spoke.azurerm_resource_group.spoke.name
++ virtual_network_name      = module.spoke.azurerm_virtual_network.spoke_vnet.name
++ remote_virtual_network_id = module.hub.azurerm_virtual_network.hub_vnet.id
++ allow_forwarded_traffic   = true
++ allow_gateway_transit     = false
++ use_remote_gateways       = true
 ```
 
-### 4. 🔄 UPDATED IN-PLACE - module.cognitive_di_ds.azurerm_monitor_diagnostic_setting.this[0]
+### 3. 🔄 UPDATED IN-PLACE - module.app.azurerm_linux_web_app.api
 
 **Action:** updated in-place
 
-**Resource Name:** `module.cognitive_di_ds.azurerm_monitor_diagnostic_setting.this[0]`
+**Resource Name:** `module.app.azurerm_linux_web_app.api`
 
 **Changes:**
 ```
-~ resource "azurerm_monitor_diagnostic_setting" "this" {
-- metric {
-- category = "AllMetrics" -> null
-- enabled  = false -> null
-- retention_policy {
-- days    = 0 -> null
-- enabled = false -> null
+~ resource "azurerm_linux_web_app" "api" {
+~ tags                = {
++ "Environment" = "Prod"
++ "Owner"       = "PlatformTeam"
+~ site_config {
+~ minimum_tls_version = "1.1" -> "1.2"
+~ always_on           = false -> true
++ http2_enabled       = true
+~ app_settings = {
+~ "ASPNETCORE_ENVIRONMENT" = "Staging" -> "Production"
++ "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app.instrumentation_key
+~ sku_name       = "GP_Gen5_4" -> "GP_Gen5_8" # forces replacement
+~ max_size_gb    = 250 -> 512
+~ zone_redundant = false -> true
 ```
 
-### 5. ❌ DESTROYED - module.data_factory[0].azurerm_data_factory.this
+### 4. ➕ CREATED - module.data.azurerm_private_endpoint.sql
+
+**Action:** created
+
+**Resource Name:** `module.data.azurerm_private_endpoint.sql`
+
+**Changes:**
+```
++ resource "azurerm_private_endpoint" "sql" {
++ name                = "pep-sql-appdb"
++ location            = module.data.azurerm_resource_group.data.location
++ resource_group_name = module.data.azurerm_resource_group.data.name
++ subnet_id           = module.spoke.azurerm_subnet.app_subnet.id
++ private_service_connection {
++ name                           = "sql-connection"
++ is_manual_connection           = false
++ private_connection_resource_id = module.data.azurerm_mssql_server.sql.id
++ subresource_names              = ["sqlServer"]
+```
+
+### 5. ❌ DESTROYED - module.app.azurerm_monitor_diagnostic_setting.api
 
 **Action:** destroyed
 
-**Resource Name:** `module.data_factory[0].azurerm_data_factory.this`
+**Resource Name:** `module.app.azurerm_monitor_diagnostic_setting.api`
 
 **Changes:**
 ```
-- resource "azurerm_data_factory" "this" {
-- id                               = "/subscriptions/6475d2e4-43e2-4de5-b14f-6a2504112209/resourceGroups/ge-qc-rg/providers/Microsoft.DataFactory/factories/ge-qc-adf" -> null
-- location                         = "eastus" -> null
-- managed_virtual_network_enabled  = false -> null
-- name                             = "ge-qc-adf" -> null
-- public_network_enabled           = true -> null
-- resource_group_name              = "ge-qc-rg" -> null
-- tags                             = {} -> null
-- identity {
-- identity_ids = [] -> null
-- principal_id = "1325f162-44ef-4ea2-b618-d58bf710a3f8" -> null
-- tenant_id    = "59acb64d-7f3d-4920-b40e-e3567a44d24e" -> null
-- type         = "SystemAssigned" -> null
-```
-
-### 6. 🔄 UPDATED IN-PLACE - module.web_app.azurerm_windows_web_app.this
-
-**Action:** updated in-place
-
-**Resource Name:** `module.web_app.azurerm_windows_web_app.this`
-
-**Changes:**
-```
-~ resource "azurerm_windows_web_app" "this" {
-~ public_network_access_enabled                  = true -> false
+- resource "azurerm_monitor_diagnostic_setting" "api" {
+- name                       = "diag-api" -> null
+- target_resource_id         = module.app.azurerm_linux_web_app.api.id -> null
+- log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id -> null
 ```
 
 ---
@@ -132,4 +138,12 @@ Use the AI-enhanced version of this tool.
 
 **Report Type:** Basic (No AI)  
 **Parser Version:** 1.0  
-**Generation Time:** 2025-11-20 20:49:50
+**Generation Time:** 2025-12-07 23:08:26
+
+---
+
+<div align="center">
+
+*Generated using:* [**Terraform AI Assistance**](https://marketplace.visualstudio.com/items?itemName=cloudcraft.terraform-report-generator)
+
+</div>
