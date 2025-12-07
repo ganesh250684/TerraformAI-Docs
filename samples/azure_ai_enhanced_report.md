@@ -1,438 +1,217 @@
-# 🤖 Terraform Plan Analysis Report (AI-Enhanced)
+# 📊 Terraform Plan Analysis Report
 
-**Generated:** December 7, 2025  
-**Status:** ✅ AI Analysis Complete  
-**Cloud Provider:** Azure  
-**Complexity Score:** 6.8/10 (Medium Risk)
+**Generated on:** 2025-11-20  
+**Environment:** Production
 
----
+## 📝 Executive Summary
 
-## 📊 Executive Summary
+This Terraform plan proposes **27 infrastructure changes** to the Production environment:
 
-This Terraform plan introduces networking and virtual machine infrastructure in Azure, including a new Virtual Network with subnets and network security rules. The changes represent a foundational deployment for a web application environment.
+- **0 resources to add** ✅
+- **27 resources to update** 🔄
+- **1 resource to destroy** ❌
 
-**🎯 Key Highlights:**
-- 8 resources will be created (VNet, Subnets, NSG, VM)
-- No resources will be destroyed (Safe operation)
-- Estimated cost impact: +$87.60/month
-- Security posture: Good baseline, improvements recommended
-- Deployment time: ~5-7 minutes
+### Key Changes Overview
 
----
+1. **Application Gateway Update**: Significant changes to the configuration of the application gateway, including backend address pools and HTTP settings.
 
-## 🚨 AI Risk Assessment
+2. **Key Vault Configuration**: Updates to the public network access settings for key vaults, enhancing security.
 
-### Overall Risk Level: **MEDIUM** ⚠️
+3. **Web Application Firewall Policy Removal**: The existing WAF policy is set to be destroyed, which may affect security.
 
-| Risk Category | Level | Details |
-|--------------|-------|---------|
-| **Infrastructure Impact** | 🟢 Low | New resources, no modifications to existing |
-| **Security Risk** | 🟡 Medium | NSG rules need review for least privilege |
-| **Cost Impact** | 🟢 Low | Standard VM costs well within budget |
-| **Rollback Complexity** | 🟢 Low | Simple destroy operation if needed |
-| **Downtime Risk** | 🟢 None | New deployment, no existing services affected |
+4. **Subnet Service Endpoint Changes**: Addition of service endpoints for key vaults across multiple subnets.
 
-### 🔍 AI-Detected Concerns
+5. **Windows Web App Updates**: Changes to the public network access settings and virtual applications for multiple web apps.
 
-1. **NSG Rule Too Permissive**
-   - Port 22 (SSH) open to 0.0.0.0/0 (entire internet)
-   - **Recommendation:** Restrict to specific IP ranges or VPN gateway
-   - **Security Impact:** High - Exposed to brute force attacks
+## 🔍 Detailed Changes
 
-2. **No Backup Policy Configured**
-   - Virtual Machine lacks Azure Backup configuration
-   - **Recommendation:** Enable Azure Backup with 7-day retention
-   - **Risk:** Data loss in case of VM failure or corruption
+### 1. 🔄 azurerm_application_gateway.network - Application Gateway Configuration Update
 
-3. **Missing Monitoring and Alerts**
-   - No Azure Monitor diagnostic settings
-   - **Recommendation:** Enable VM insights and set up CPU/memory alerts
-   - **Impact:** Reduced visibility into performance issues
+- **Resource**: `azurerm_application_gateway.network`
+- **Action**: UPDATE IN-PLACE
+- **Risk Level**: 🟡 MEDIUM
 
----
-
-## 📈 Resource Changes
-
-### ➕ Resources to Create (8)
-
-#### 1. azurerm_resource_group.main
-**Type:** Resource Group  
-**Purpose:** Container for all Azure resources  
-**AI Insight:** Standard deployment pattern, properly scoped.
-
-```hcl
-+ name     = "myapp-rg"
-+ location = "East US"
-+ tags = {
-    Environment = "production"
-    ManagedBy   = "terraform"
-  }
+**Changes:**
 ```
-
----
-
-#### 2. azurerm_virtual_network.main
-**Type:** Virtual Network  
-**Purpose:** Isolated network environment for resources  
-**AI Insight:** Well-sized address space for small-medium deployments.
-
-```hcl
-+ name                = "myapp-vnet"
-+ address_space       = ["10.0.0.0/16"]
-+ location            = "East US"
-+ resource_group_name = "myapp-rg"
+- firewall_policy_id = "/subscriptions/77be4323-c969-4d87-b615-84b0d0bc4502/resourceGroups/ge-prd-rg/providers/Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/ge-prd-waf" -> null
 ```
+→ Firewall policy association is being removed to allow independent security configuration.
 
-**📊 Network Planning:**
-- Total addresses: 65,536
-- Recommended subnets: /24 (254 hosts each)
-- Reserved addresses per subnet: 5 (Azure reserved)
-
----
-
-#### 3. azurerm_subnet.web
-**Type:** Subnet  
-**Purpose:** Web tier subnet for frontend servers  
-**AI Insight:** Appropriate size for web tier, allows 251 usable IPs.
-
-```hcl
-+ name                 = "web-subnet"
-+ resource_group_name  = "myapp-rg"
-+ virtual_network_name = "myapp-vnet"
-+ address_prefixes     = ["10.0.1.0/24"]
 ```
-
-**💡 Capacity Planning:**
-- Total IPs: 256
-- Usable IPs: 251 (5 reserved by Azure)
-- Recommended usage: Up to 200 hosts (80% utilization)
-
----
-
-#### 4. azurerm_subnet.database
-**Type:** Subnet  
-**Purpose:** Database tier subnet (backend)  
-**AI Insight:** Good network segmentation practice.
-
-```hcl
-+ name                 = "database-subnet"
-+ resource_group_name  = "myapp-rg"
-+ virtual_network_name = "myapp-vnet"
-+ address_prefixes     = ["10.0.2.0/24"]
+~ force_firewall_policy_association = true -> false
 ```
+→ Security enforcement setting is being changed to allow flexible policy management.
 
-**🔒 Security Recommendation:**
-Consider adding service endpoints for Azure SQL:
-```hcl
-service_endpoints = ["Microsoft.Sql"]
 ```
-
----
-
-#### 5. azurerm_network_security_group.web
-**Type:** Network Security Group  
-**Purpose:** Firewall rules for web subnet  
-**AI Insight:** ⚠️ Rules need hardening (see security recommendations).
-
-```hcl
-+ name                = "web-nsg"
-+ location            = "East US"
-+ resource_group_name = "myapp-rg"
-
-+ security_rule {
-    name                       = "SSH"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "0.0.0.0/0"  # ⚠️ TOO PERMISSIVE
-    destination_address_prefix = "*"
-  }
+- backend_address_pool {
+    - fqdns = ["ge-prd-mobile-api-apps-sales.azurewebsites.net"] -> null
+    - id = "/subscriptions/77be4323-c969-4d87-b615-84b0d0bc4502/resourceGroups/ge-prd-rg/providers/Microsoft.Network/applicationGateways/ge-prd-agw/backendAddressPools/ge-prd-sales-agw-mobile-api-beap" -> null
+    - ip_addresses = [] -> null
+    - name = "ge-prd-sales-agw-mobile-api-beap" -> null
+}
 ```
+→ Backend address pool configuration for mobile API sales is being removed.
 
-**🚨 Critical Security Fix Required:**
-```hcl
-# Replace with:
-source_address_prefix = "YOUR_OFFICE_IP/32"
-# Or use Azure Bastion instead of direct SSH
 ```
-
----
-
-#### 6. azurerm_network_interface.main
-**Type:** Network Interface  
-**Purpose:** Connects VM to subnet  
-**AI Insight:** Standard configuration, properly associated.
-
-```hcl
-+ name                = "myapp-nic"
-+ location            = "East US"
-+ resource_group_name = "myapp-rg"
-
-+ ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.web.id
-    private_ip_address_allocation = "Dynamic"
-  }
++ backend_address_pool {
+    + fqdns = ["ge-prd-mobile-api-apps-sales.azurewebsites.net"]
+    + id = (known after apply)
+    + ip_addresses = []
+    + name = "ge-prd-sales-agw-mobile-api-beap"
+}
 ```
+→ A new backend address pool is being added to support the mobile API.
 
----
+**Details**
+- **Name**: ge-prd-agw
+- **Resource Group**: ge-prd-rg
+- **Location**: eastus
 
-#### 7. azurerm_public_ip.main
-**Type:** Public IP Address  
-**Purpose:** Internet-facing IP for VM  
-**AI Insight:** Consider using Application Gateway or Load Balancer instead for production.
+**Impact Assessment**
+The changes to the application gateway will allow for more flexible management of backend services and security policies. However, removing the firewall policy may expose the application to potential vulnerabilities if not properly managed.
 
-```hcl
-+ name                = "myapp-public-ip"
-+ location            = "East US"
-+ resource_group_name = "myapp-rg"
-+ allocation_method   = "Static"
-+ sku                 = "Standard"
+**Use Cases Enabled:**
+- Improved backend service management.
+- Enhanced flexibility in security policy application.
+
+**Benefits**
+- Allows for dynamic scaling of backend services.
+- Reduces dependency on a single security policy.
+
+### 2. 🔄 azurerm_web_application_firewall_policy.waf[0] - Web Application Firewall Policy Removal
+
+- **Resource**: `azurerm_web_application_firewall_policy.waf[0]`
+- **Action**: DESTROY
+- **Risk Level**: 🔴 HIGH
+
+**Changes:**
 ```
-
-**💰 Cost:** $3.65/month (Standard SKU)
-
-**🏗️ Architecture Recommendation:**
-For production, use Azure Application Gateway:
-- WAF protection included
-- SSL termination
-- Better scalability
-- Cost: ~$0.20/hour = $144/month (more expensive but production-ready)
-
----
-
-#### 8. azurerm_linux_virtual_machine.main
-**Type:** Virtual Machine  
-**Purpose:** Web application server  
-**AI Insight:** Good baseline size, consider managed disks encryption.
-
-```hcl
-+ name                = "myapp-vm"
-+ resource_group_name = "myapp-rg"
-+ location            = "East US"
-+ size                = "Standard_B2s"
-+ admin_username      = "azureuser"
-
-+ os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
-  }
-
-+ source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
+- id = "/subscriptions/77be4323-c969-4d87-b615-84b0d0bc4502/resourceGroups/ge-prd-rg/providers/Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/ge-prd-waf" -> null
 ```
+→ The web application firewall policy is being destroyed, which may leave applications vulnerable to attacks.
 
-**📊 VM Specifications:**
-- **Size:** Standard_B2s (2 vCPUs, 4GB RAM)
-- **Cost:** $30.37/month (B-series burstable)
-- **Disk:** 30GB Premium SSD (~$4.81/month)
-- **Best for:** Low-medium traffic web apps
+**Details**
+- **Name**: ge-prd-waf
+- **Resource Group**: ge-prd-rg
 
-**⚠️ Important Notes:**
-1. Update OS version: Ubuntu 18.04 reaches EOL in April 2023
-   - **Recommendation:** Use `20.04-LTS` or `22.04-LTS`
-2. Enable Azure Disk Encryption (free)
-3. Consider Availability Set for production HA
+**Impact Assessment**
+The removal of the WAF policy poses a significant risk as it may expose applications to various web threats. Immediate attention is required to ensure that alternative security measures are in place.
 
----
+**Use Cases Enabled:**
+- None, as this action reduces security.
 
-## 💰 Cost Impact Analysis
+**Benefits**
+- No benefits; this change is detrimental to security.
 
-### Monthly Cost Breakdown
+### 3. 🔄 azurerm_key_vault.this[0] - Key Vault Configuration Update
 
-| Resource | Monthly Cost | Notes |
-|----------|--------------|-------|
-| Virtual Machine (B2s) | $30.37 | 2 vCPU, 4GB RAM |
-| Premium SSD (P4, 32GB) | $4.81 | OS disk |
-| Public IP (Static) | $3.65 | Standard SKU |
-| Virtual Network | $0.00 | Free |
-| NSG | $0.00 | Free |
-| Bandwidth (Outbound, ~100GB) | $8.70 | Estimate |
-| **Total** | **$87.60** | **Per month** |
+- **Resource**: `azurerm_key_vault.this[0]`
+- **Action**: UPDATE IN-PLACE
+- **Risk Level**: 🟡 MEDIUM
 
-### 📈 Cost Optimization Opportunities
-
-1. **Use Reserved Instances** (Potential savings: $10/month)
-   - 1-year RI: 30% savings = $9.11/month
-   - 3-year RI: 50% savings = $15.19/month
-
-2. **Downsize During Off-Hours** (Potential savings: $15/month)
-   - Auto-shutdown nights/weekends for dev/test
-   - 50% uptime = 50% cost savings
-
-3. **Use Azure Hybrid Benefit** (If applicable)
-   - Bring your own Windows license
-   - Up to 80% savings on Windows VMs
-
----
-
-## 🔒 Security Analysis
-
-### ⚠️ Security Issues Found
-
-1. **SSH Exposed to Internet (High Risk)**
-   ```hcl
-   # Current (INSECURE):
-   source_address_prefix = "0.0.0.0/0"
-   
-   # Recommended fix:
-   source_address_prefix = "YOUR_VPN_IP/32"
-   
-   # Better solution: Use Azure Bastion
-   resource "azurerm_bastion_host" "main" {
-     name                = "myapp-bastion"
-     location            = azurerm_resource_group.main.location
-     resource_group_name = azurerm_resource_group.main.name
-     
-     ip_configuration {
-       name                 = "configuration"
-       subnet_id            = azurerm_subnet.bastion.id
-       public_ip_address_id = azurerm_public_ip.bastion.id
-     }
-   }
-   ```
-
-2. **No Disk Encryption Enabled**
-   ```hcl
-   # Add to os_disk block:
-   os_disk {
-     caching              = "ReadWrite"
-     storage_account_type = "Premium_LRS"
-     disk_encryption_set_id = azurerm_disk_encryption_set.main.id
-   }
-   ```
-
-3. **Missing Network Watcher**
-   ```hcl
-   # Add for traffic analysis:
-   resource "azurerm_network_watcher" "main" {
-     name                = "myapp-network-watcher"
-     location            = azurerm_resource_group.main.location
-     resource_group_name = azurerm_resource_group.main.name
-   }
-   ```
-
-### ✅ Security Best Practices
-
-1. **Enable Azure Security Center** (Free tier available)
-2. **Implement Just-In-Time VM Access**
-3. **Enable Azure Key Vault** for secrets management
-4. **Configure Azure Monitor** for security logs
-5. **Use Managed Identities** instead of passwords
-
----
-
-## 🧪 Testing Recommendations
-
-### Pre-Deployment Tests
-
-1. **Validate Terraform Configuration**
-   ```bash
-   terraform validate
-   terraform fmt -check
-   ```
-
-2. **Check Azure Quotas**
-   ```bash
-   az vm list-usage --location "eastus" -o table
-   ```
-
-3. **Test NSG Rules**
-   ```bash
-   # After deployment, test connectivity:
-   ssh -i ~/.ssh/id_rsa azureuser@<public-ip>
-   ```
-
-### Post-Deployment Validation
-
-```bash
-# 1. Verify resource group
-az group show --name myapp-rg
-
-# 2. Check VM status
-az vm show -d -g myapp-rg -n myapp-vm --query powerState
-
-# 3. Test networking
-az network nic show -g myapp-rg -n myapp-nic
-
-# 4. Verify NSG rules
-az network nsg show -g myapp-rg -n web-nsg
+**Changes:**
 ```
-
----
-
-## 📝 Deployment Checklist
-
-### Before Running `terraform apply`
-
-- [ ] **Review NSG rules** - Restrict SSH access
-- [ ] **Update Ubuntu version** - Use 20.04-LTS or newer
-- [ ] **Set up Azure Backup** - Configure recovery vault
-- [ ] **Enable monitoring** - Azure Monitor diagnostics
-- [ ] **Review costs** - Confirm budget approval
-- [ ] **Backup state file** - `terraform state pull > backup.tfstate`
-
-### During Deployment
-
-- [ ] Monitor deployment progress in Azure Portal
-- [ ] Watch for any quota or permission errors
-- [ ] Verify VM is running after creation
-
-### After Deployment
-
-- [ ] Test SSH connectivity (from allowed IPs only)
-- [ ] Configure application on VM
-- [ ] Set up Azure Backup policy
-- [ ] Enable Azure Security Center recommendations
-- [ ] Document public IP and credentials securely
-- [ ] Set up monitoring alerts (CPU, memory, disk)
-
----
-
-## 🔄 Rollback Procedure
-
-If issues occur:
-
-```bash
-# Quick rollback - destroy resources
-terraform destroy -auto-approve
-
-# Or destroy specific resources:
-terraform destroy -target=azurerm_linux_virtual_machine.main
-terraform destroy -target=azurerm_public_ip.main
-
-# Restore from backup if needed:
-terraform state push backup.tfstate
+~ public_network_access_enabled = true -> false
 ```
+→ Public network access is being disabled to enhance security.
 
----
+**Details**
+- **Name**: ge-prd-kv-cert
+- **Resource Group**: ge-prd-rg
 
-## 📚 Additional Resources
+**Impact Assessment**
+Disabling public access will significantly improve the security posture of the key vault, but it may require adjustments in how applications access the vault.
 
-- [Azure Well-Architected Framework](https://docs.microsoft.com/azure/architecture/framework/)
-- [Azure Security Best Practices](https://docs.microsoft.com/azure/security/fundamentals/best-practices-and-patterns)
-- [Azure Cost Management](https://docs.microsoft.com/azure/cost-management-billing/)
+**Use Cases Enabled:**
+- Enhanced security for sensitive data.
 
----
+**Benefits**
+- Reduces the attack surface for potential threats.
 
-## 🤖 AI Analysis Summary
+### 4. 🔄 azurerm_windows_web_app.this - Windows Web App Configuration Update
 
-**Confidence Score:** 89%  
-**Processing Time:** 3.8 seconds  
-**Tokens Used:** 6,850 (Input: 2,400, Output: 4,450)  
+- **Resource**: `azurerm_windows_web_app.this`
+- **Action**: UPDATE IN-PLACE
+- **Risk Level**: 🟡 MEDIUM
 
-This analysis identified security improvements needed for production readiness, particularly around SSH access and monitoring. The deployment is low-risk but should implement the recommended security hardening before going live.
+**Changes:**
+```
+~ public_network_access_enabled = true -> false
+```
+→ Public network access is being disabled to enhance security.
 
-**Model Used:** GPT-4o-mini  
-**Analysis Date:** December 7, 2025  
+**Details**
+- **Name**: ge-prd-web-app-apps
+- **Resource Group**: ge-prd-rg
 
----
+**Impact Assessment**
+This change will improve security but may require reconfiguration of access methods for users and services.
 
-*This is an AI-enhanced sample report demonstrating the detailed analysis you'll receive. Your actual reports will provide similar insights tailored to your specific infrastructure changes.*
+**Use Cases Enabled:**
+- Secure access to the web application.
+
+**Benefits**
+- Protects against unauthorized access.
+
+### 5. 🔄 azurerm_subnet.this - Subnet Service Endpoint Update
+
+- **Resource**: `azurerm_subnet.this`
+- **Action**: UPDATE IN-PLACE
+- **Risk Level**: 🟢 LOW
+
+**Changes:**
+```
+~ service_endpoints = [ + "Microsoft.KeyVault" ] -> null
+```
+→ Adding service endpoints for Azure Key Vault to the subnet enhances connectivity.
+
+**Details**
+- **Name**: ge-prd-agw-snet
+- **Resource Group**: ge-prd-rg
+
+**Impact Assessment**
+This change improves the ability of resources within the subnet to securely communicate with Azure Key Vault.
+
+**Use Cases Enabled:**
+- Secure access to key vault resources from the subnet.
+
+**Benefits**
+- Facilitates secure and efficient resource management.
+
+## ⚠️ Risk Assessment
+
+### 🔴 High Risks
+- Removal of the Web Application Firewall policy may expose applications to security vulnerabilities.
+
+### 🟡 Medium Risks
+- Changes to application gateway and key vault configurations could lead to misconfigurations if not managed properly.
+
+### 🟢 Low Risks
+- Subnet updates are generally low risk but should be monitored for connectivity issues.
+
+## 💡 Recommendations
+
+1. **Implement Alternative Security Measures**: Immediately establish alternative security measures to mitigate risks associated with the removal of the WAF policy.
+
+2. **Review Access Configurations**: Ensure that all applications and services accessing the key vault are updated to comply with the new access settings.
+
+3. **Monitor Changes Closely**: Implement monitoring for the application gateway and key vault to detect any potential issues arising from the changes.
+
+4. **Conduct Security Audits**: Regularly audit security configurations to ensure compliance with best practices.
+
+5. **Educate Teams on Changes**: Provide training for teams on the implications of these changes and how to adapt to the new configurations.
+
+## ✍️ Approval Sign-Off
+
+| Role                     | Name                | Date              | Signature         |
+|--------------------------|---------------------|-------------------|-------------------|
+| Infrastructure Lead      |                     |                   |                   |
+| Application Owner        |                     |                   |                   |
+| Security Lead            |                     |                   |                   |
+| Data Platform Lead       |                     |                   |                   |
+
+**Report Generated**: 2025-11-20  
+**Terraform Version**: Latest  
+**Plan File**: terraform_plan.tf  
+**Environment**: Production  
+**Review Status**: Pending Approval

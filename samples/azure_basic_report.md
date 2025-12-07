@@ -1,159 +1,135 @@
-# ⚠️ Terraform Plan Basic Report
+# Terraform Plan Report (Basic)
 
-**Generated:** 2025-12-07 00:42:19  
-**Status:** ⚠️ AI Analysis Not Available - Basic Report Generated
-
----
-
-## 📊 Plan Summary
-
-This Terraform plan proposes **5 infrastructure changes**:
-
-- **3 resources to add** ✅
-- **1 resources to change** 🔄
-- **1 resources to destroy** ❌
+**Generated:** 2025-11-20 20:49:50  
+**Plan File:** planQC20NovGN-output.txt
 
 ---
 
-## 📝 Changes Breakdown
+## Summary
 
-### ✅ Resources to Add (3)
-
-1. `azurerm_virtual_network_peering.hub_to_spoke`
-2. `azurerm_virtual_network_peering.spoke_to_hub`
-3. `azurerm_private_endpoint.sql`
-
-### 🔄 Resources to Change (1)
-
-1. `azurerm_linux_web_app.api`
-
-### ❌ Resources to Destroy (1)
-
-1. `azurerm_monitor_diagnostic_setting.api`
+| Metric | Count |
+|--------|-------|
+| Resources to Add | 0 |
+| Resources to Change | 5 |
+| Resources to Destroy | 1 |
+| **Total Changes** | 051 |
 
 ---
 
-## 🔍 Raw Terraform Plan Output
+## Resource Changes
 
-```terraform
-Terraform v1.9.1
-on windows_amd64
+### 1. 🔄 UPDATED IN-PLACE - azurerm_virtual_network_peering.with_new
 
-Initializing the backend...
+**Action:** updated in-place
 
-Initializing provider plugins...
-- Finding hashicorp/azurerm versions matching "~> 4.0"...
-- Installing hashicorp/azurerm v4.4.0...
-- Installed hashicorp/azurerm v4.4.0
-- Installing hashicorp/random v3.6.0...
+**Resource Name:** `azurerm_virtual_network_peering.with_new`
 
-Terraform has been successfully initialized!
+**Changes:**
+```
+~ resource "azurerm_virtual_network_peering" "with_new" {
+~ allow_gateway_transit                  = false -> true
+```
 
-module.hub.azurerm_resource_group.hub: Refreshing state...
-module.hub.azurerm_virtual_network.hub_vnet: Refreshing state...
-module.spoke.azurerm_virtual_network.spoke_vnet: Refreshing state...
-module.app.azurerm_linux_web_app.api: Refreshing state...
-module.data.azurerm_mssql_database.appdb: Refreshing state...
+### 2. 🔄 UPDATED IN-PLACE - azurerm_virtual_network_peering.with_old
 
-------------------------------------------------------------------------
+**Action:** updated in-place
 
-An execution plan has been generated and is shown below.
-Resource actions are indicated with the following symbols:
-  + create
-  ~ update in-place
-  - destroy
-  +/- create replacement and then destroy
+**Resource Name:** `azurerm_virtual_network_peering.with_old`
 
-Terraform will perform the following actions:
+**Changes:**
+```
+~ resource "azurerm_virtual_network_peering" "with_old" {
+~ allow_forwarded_traffic                = false -> true
+```
 
-  # module.hub.azurerm_virtual_network_peering.hub_to_spoke will be created
-  + resource "azurerm_virtual_network_peering" "hub_to_spoke" {
-      + name                      = "hub-to-spoke"
-      + resource_group_name       = module.hub.azurerm_resource_group.hub.name
-      + virtual_network_name      = module.hub.azurerm_virtual_network.hub_vnet.name
-      + remote_virtual_network_id = module.spoke.azurerm_virtual_network.spoke_vnet.id
-      + allow_forwarded_traffic   = true
-      + allow_gateway_transit     = true
-      + use_remote_gateways       = false
-    }
+### 3. 🔄 UPDATED IN-PLACE - module.autofeed_cc.azurerm_windows_web_app.this
 
-  # module.spoke.azurerm_virtual_network_peering.spoke_to_hub will be created
-  + resource "azurerm_virtual_network_peering" "spoke_to_hub" {
-      + name                      = "spoke-to-hub"
-      + resource_group_name       = module.spoke.azurerm_resource_group.spoke.name
-      + virtual_network_name      = module.spoke.azurerm_virtual_network.spoke_vnet.name
-      + remote_virtual_network_id = module.hub.azurerm_virtual_network.hub_vnet.id
-      + allow_forwarded_traffic   = true
-      + allow_gateway_transit     = false
-      + use_remote_gateways       = true
-    }
+**Action:** updated in-place
 
-  # module.app.azurerm_linux_web_app.api will be updated in-place
-  ~ resource "azurerm_linux_web_app" "api" {
-        name                = "ge-api-prod"
-        resource_group_name = module.app.azurerm_resource_group.app.name
-        service_plan_id     = module.app.azurerm_service_plan.app_sp.id
-        https_only          = true
-      ~ tags                = {
-          + "Environment" = "Prod"
-          + "Owner"       = "PlatformTeam"
-        }
+**Resource Name:** `module.autofeed_cc.azurerm_windows_web_app.this`
 
-      ~ site_config {
-          ~ minimum_tls_version = "1.1" -> "1.2"
-          ~ always_on           = false -> true
-          + http2_enabled       = true
-        }
+**Changes:**
+```
+~ resource "azurerm_windows_web_app" "this" {
+~ public_network_access_enabled                  = true -> false
+```
 
-      ~ app_settings = {
-          ~ "ASPNETCORE_ENVIRONMENT" = "Staging" -> "Production"
-          + "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.app.instrumentation_key
-        }
-    }
+### 4. 🔄 UPDATED IN-PLACE - module.cognitive_di_ds.azurerm_monitor_diagnostic_setting.this[0]
 
-  # module.data.azurerm_mssql_database.appdb must be replaced
- +/- resource "azurerm_mssql_database" "appdb" {
-        name           = "appdb"
-        server_id      = module.data.azurerm_mssql_server.sql.id
-      ~ sku_name       = "GP_Gen5_4" -> "GP_Gen5_8" # forces replacement
-      ~ max_size_gb    = 250 -> 512
-      ~ zone_redundant = false -> true
-    }
+**Action:** updated in-place
 
-  # module.data.azurerm_private_endpoint.sql will be created
-  + resource "azurerm_private_endpoint" "sql" {
-      + name                = "pep-sql-appdb"
-      + location            = module.data.azurerm_resource_group.data.location
-      + resource_group_name = module.data.azurerm_resource_group.data.name
-      + subnet_id           = module.spoke.azurerm_subnet.app_subnet.id
+**Resource Name:** `module.cognitive_di_ds.azurerm_monitor_diagnostic_setting.this[0]`
 
-      + private_service_connection {
-          + name                           = "sql-connection"
-          + is_manual_connection           = false
-          + private_connection_resource_id = module.data.azurerm_mssql_server.sql.id
-          + subresource_names              = ["sqlServer"]
-        }
-    }
+**Changes:**
+```
+~ resource "azurerm_monitor_diagnostic_setting" "this" {
+- metric {
+- category = "AllMetrics" -> null
+- enabled  = false -> null
+- retention_policy {
+- days    = 0 -> null
+- enabled = false -> null
+```
 
-  # module.app.azurerm_monitor_diagnostic_setting.api will be destroyed
-  - resource "azurerm_monitor_diagnostic_setting" "api" {
-      - name                       = "diag-api" -> null
-      - target_resource_id         = module.app.azurerm_linux_web_app.api.id -> null
-      - log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id -> null
-    }
+### 5. ❌ DESTROYED - module.data_factory[0].azurerm_data_factory.this
 
-Plan: 3 to add, 1 to change, 1 to destroy, 1 to replace (1 resource destroyed).
+**Action:** destroyed
 
-─────────────────────────────────────────────────────────────────────────────
+**Resource Name:** `module.data_factory[0].azurerm_data_factory.this`
 
+**Changes:**
+```
+- resource "azurerm_data_factory" "this" {
+- id                               = "/subscriptions/6475d2e4-43e2-4de5-b14f-6a2504112209/resourceGroups/ge-qc-rg/providers/Microsoft.DataFactory/factories/ge-qc-adf" -> null
+- location                         = "eastus" -> null
+- managed_virtual_network_enabled  = false -> null
+- name                             = "ge-qc-adf" -> null
+- public_network_enabled           = true -> null
+- resource_group_name              = "ge-qc-rg" -> null
+- tags                             = {} -> null
+- identity {
+- identity_ids = [] -> null
+- principal_id = "1325f162-44ef-4ea2-b618-d58bf710a3f8" -> null
+- tenant_id    = "59acb64d-7f3d-4920-b40e-e3567a44d24e" -> null
+- type         = "SystemAssigned" -> null
+```
+
+### 6. 🔄 UPDATED IN-PLACE - module.web_app.azurerm_windows_web_app.this
+
+**Action:** updated in-place
+
+**Resource Name:** `module.web_app.azurerm_windows_web_app.this`
+
+**Changes:**
+```
+~ resource "azurerm_windows_web_app" "this" {
+~ public_network_access_enabled                  = true -> false
 ```
 
 ---
 
-## 💡 Recommendations
+## Notes
 
-Since this is a basic report without AI analysis:
+This is a **basic report** generated by parsing Terraform plan output.
 
-1. Review the raw plan output carefully
-2. Try generating an AI-powered report again later
-3. Manually review each resource change for security and data-loss risks
+- ✅ Extracted resource names and actions
+- ✅ Listed attribute changes
+- ❌ No impact analysis
+- ❌ No risk assessment
+- ❌ No recommendations
+- ❌ No dependency analysis
+
+**For detailed analysis with AI:**
+- Risk assessment
+- Impact analysis
+- Deployment recommendations
+- Rollback procedures
+- Testing checklists
+
+Use the AI-enhanced version of this tool.
+
+---
+
+**Report Type:** Basic (No AI)  
+**Parser Version:** 1.0  
+**Generation Time:** 2025-11-20 20:49:50
